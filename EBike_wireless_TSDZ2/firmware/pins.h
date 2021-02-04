@@ -40,10 +40,10 @@ typedef enum {
     LED_PWR__PIN = 0,
 } LED_pins_t;
 
-bool button_plus_is_set(void);
-bool button_minus_is_set(void);
-bool button_enter_is_set(void);
-bool button_standby_is_set(void);
-bool button_bootloader_is_set(void);
+// bool button_plus_is_set(void);
+// bool button_minus_is_set(void);
+// bool button_enter_is_set(void);
+// bool button_standby_is_set(void);
+// bool button_bootloader_is_set(void);
 
 #endif /* PINS_H_ */
