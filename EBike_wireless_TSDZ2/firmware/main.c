@@ -1187,14 +1187,14 @@ void ble_send_periodic_data(void)
   tx_data[5] = (uint8_t)((ui_vars.ui8_braking & 1) | ((ui_vars.ui8_lights & 1) << 1));
   tx_data[6] = ui_vars.ui8_motor_hall_sensors;
   tx_data[7] = ui_vars.ui8_pas_pedal_right;
-  tx_data[8] = ui16_m_alternate_field_value;//ui_vars.ui8_adc_throttle;
+  tx_data[8] = ui_vars.ui8_adc_throttle;
   tx_data[9] = ui_vars.ui8_motor_temperature;
-  tx_data[10] = ui_vars.ui8_throttle_virtual;//ui_vars.ui8_throttle
+  tx_data[10] = ui_vars.ui8_throttle
   tx_data[11] = (uint8_t)(ui_vars.ui16_adc_pedal_torque_sensor & 0xff);
   tx_data[12] = (uint8_t)(ui_vars.ui16_adc_pedal_torque_sensor >> 8);
   tx_data[13] = ui_vars.ui8_pedal_weight_with_offset;
   tx_data[14] = ui_vars.ui8_pedal_weight;
-  tx_data[15] = ui8_m_alternate_field_state;//ui_vars.ui8_pedal_cadence_filtered;
+  tx_data[15] = ui_vars.ui8_pedal_cadence_filtered;
   tx_data[16] = ui_vars.ui8_duty_cycle;
   tx_data[17] = (uint8_t)(ui_vars.ui16_motor_speed_erps & 0xff);
   tx_data[18] = (uint8_t)(ui_vars.ui16_motor_speed_erps >> 8);
