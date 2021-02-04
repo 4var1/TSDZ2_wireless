@@ -1864,18 +1864,6 @@ static void handle_buttons() {
 	buttons_clock(); // Note: this is done _after_ button events is checked to provide a 20ms debounce
 }
 
-void disp_soc(void)
-{
-  nrf_delay_ms(1000);
-  for (int i = 0; i < (ui8_g_battery_soc/10); i++)
-  {
-    led_pwm_on(G_LED, 100, 0, 5, 0);
-    nrf_delay_ms(200);
-    soft_blink = led_softblink_uninit(); // turn off the soft_blink led
-    nrf_delay_ms(300);
-  }
-}
-
 void led_pwm_on(uint32_t mask, uint8_t duty_cycle_max, uint8_t duty_cycle_min, uint8_t duty_cycle_step, uint32_t led_on_ms)
 {
   //mask can be ORed to turn on R &B colors
@@ -1918,6 +1906,18 @@ void led_pwm_on(uint32_t mask, uint8_t duty_cycle_max, uint8_t duty_cycle_min, u
     err_code = led_softblink_start(mask);
     APP_ERROR_CHECK(err_code);
     soft_blink = 1; //set the blocking flag
+  }
+}
+
+void disp_soc(void)
+{
+  nrf_delay_ms(1000);
+  for (int i = 0; i < (ui8_g_battery_soc/10); i++)
+  {
+    led_pwm_on(G_LED, 100, 0, 5, 0);
+    nrf_delay_ms(200);
+    soft_blink = led_softblink_uninit(); // turn off the soft_blink led
+    nrf_delay_ms(300);
   }
 }
 
