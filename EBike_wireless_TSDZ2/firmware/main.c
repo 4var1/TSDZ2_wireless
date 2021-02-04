@@ -1189,7 +1189,7 @@ void ble_send_periodic_data(void)
   tx_data[7] = ui_vars.ui8_pas_pedal_right;
   tx_data[8] = ui_vars.ui8_adc_throttle;
   tx_data[9] = ui_vars.ui8_motor_temperature;
-  tx_data[10] = ui_vars.ui8_throttle
+  tx_data[10] = ui_vars.ui8_throttle;
   tx_data[11] = (uint8_t)(ui_vars.ui16_adc_pedal_torque_sensor & 0xff);
   tx_data[12] = (uint8_t)(ui_vars.ui16_adc_pedal_torque_sensor >> 8);
   tx_data[13] = ui_vars.ui8_pedal_weight_with_offset;
