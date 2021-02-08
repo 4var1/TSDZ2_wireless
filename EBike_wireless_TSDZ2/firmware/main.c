@@ -1727,8 +1727,8 @@ bool mainScreenOnPress(buttons_events_t events) {
     ) {
       if (ui_vars.ui8_assist_level > 0)
         ui_vars.ui8_assist_level--;
-        led_alert(LED_SEQUENCE_GREEN_FLASH10);
-
+      
+      led_alert(LED_SEQUENCE_GREEN_FLASH10);
       m_assist_level_change_timeout = 20; // 2 seconds
       handled = true;
     }

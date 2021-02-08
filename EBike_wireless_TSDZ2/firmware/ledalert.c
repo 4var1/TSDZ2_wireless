@@ -9,35 +9,8 @@
 #include "boards.h"
 #include "ledalert.h"
 
-#define LED_MAX_COMMANDS_IN_SEQUENCE                               16
 
-#define LED_RED                                 1
-#define LED_GREEN                               2
-#define LED_BLUE                                4
-#define LED_OFF                                 0
-#define LED_END_SEQUENCE                        252
-#define LED_REPEAT_SEQUENCE                     253 //Repeat entire sequence - next value how many times
-#define LED_REPEAT_LASTX                        254 //Repeat last x commands - next value last x-1 commands to repeat (0-15) plus 16*number of times - so max is repeat last 16 commands 16 times
 #define LED_NOCOMMAND                           255
-
-#define MS_TO_TICKS(a) ((a) / (LED_CLOCK_MS))
-#define CMDS_RPT(a,b) ((a) + (16 * (b)))
-
-// Define sequences here
-// Sequences are 2 bytes each - first is the colour or other instruction, 2nd is either time to show for LED - or parameter for command.
-
-#define LED_BYTES_PER_COMMAND                   2
-#define LED_NUM_SEQUENCES                       4 //Update when new sequences are added
-
-// Don't nest loops in led sequences!
-
-uint8_t ui8_led_sequences [LED_NUM_SEQUENCES][LED_MAX_COMMANDS_IN_SEQUENCE * LED_BYTES_PER_COMMAND] = {
-    {LED_RED,MS_TO_TICKS(1000),LED_GREEN,MS_TO_TICKS(1000),LED_BLUE,MS_TO_TICKS(1000),LED_OFF,MS_TO_TICKS(1000),LED_END_SEQUENCE,LED_END_SEQUENCE}, //LED_SEQUENCE_TEST_MESSAGE
-    {LED_BLUE,MS_TO_TICKS(50),LED_OFF,MS_TO_TICKS(50),LED_REPEAT_LASTX,CMDS_RPT(2,10),LED_END_SEQUENCE,LED_END_SEQUENCE},                           //LED_SEQUENCE_BLUE_FLASH10
-    {LED_GREEN,MS_TO_TICKS(50),LED_OFF,MS_TO_TICKS(50),LED_REPEAT_LASTX,CMDS_RPT(2,10),LED_END_SEQUENCE,LED_END_SEQUENCE},                          //LED_SEQUENCE_BLUE_FLASH10
-    {LED_BLUE,MS_TO_TICKS(50),LED_RED,MS_TO_TICKS(50),LED_RED+LED_BLUE,MS_TO_TICKS(50),LED_GREEN,MS_TO_TICKS(50),LED_BLUE+LED_GREEN,MS_TO_TICKS(50),LED_RED+LED_GREEN,MS_TO_TICKS(50),
-    LED_RED+LED_BLUE+LED_GREEN,MS_TO_TICKS(50),LED_REPEAT_LASTX,CMDS_RPT(7,2),LED_END_SEQUENCE,LED_END_SEQUENCE}                                    // Spectrum!
-};
 
 #if defined(BOARD_PCA10059)
 #include "pins.h"
@@ -121,7 +94,7 @@ void led_clock(void)
                 if (ui8_led_sequence_repeat_counter == 0)
                 {
                     ui8_led_sequence_repeat_counter = (ui8_led_sequence_current_parameter >> 4);
-                    ui8_led_sequence_repeat_goto_index = ui8_led_sequence_current_sequence_command_index - (2 *((ui8_led_sequence_current_parameter & 0xf)+1));
+                    ui8_led_sequence_repeat_goto_index = ui8_led_sequence_current_sequence_command_index - (2 *((ui8_led_sequence_current_parameter & 0xf)+1)); // Bug here -need to check that we're not going back too far
                 }
 
                 ui8_led_sequence_repeat_counter--;
