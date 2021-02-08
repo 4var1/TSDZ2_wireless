@@ -25,7 +25,7 @@
 #define CMDS_RPT(a,b) ((a) + (16 * (b)))         //Repeat last x commands - next value last x-1 commands to repeat (0-15) plus 16*number of times - so max is repeat last 16 commands 16 times
 
 // Define sequences here
-// Sequences are 2 bytes each - first is the colour or other instruction, 2nd is either time to show for LED - or parameter for command.
+// Sequence commands are 2 bytes each - first is the colour or other instruction, 2nd is either time to show for LED - or parameter for command.
 // End sequences with two LED_END_SEQUENCE
 // can loop previous commands with LED_REPEAT_LASTX, CMDS_RPT(2,10) where the two values are the number of previous commands to repeat,how many times.
 // Don't nest loops in led sequences, there is no stack!
