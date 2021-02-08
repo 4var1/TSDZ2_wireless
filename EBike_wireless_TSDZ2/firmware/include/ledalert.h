@@ -46,6 +46,8 @@ static const uint8_t ui8_led_sequences [LED_NUM_SEQUENCES][LED_MAX_COMMANDS_IN_S
 
 };
 
+
+// ui8_sequence
 #define LED_SEQUENCE_TEST_MESSAGE               0
 #define LED_SEQUENCE_BLUE_FLASH10               1
 #define LED_SEQUENCE_GREEN_FLASH10              2
