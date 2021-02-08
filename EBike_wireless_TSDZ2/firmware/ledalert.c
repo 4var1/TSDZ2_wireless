@@ -9,7 +9,6 @@
 #include "boards.h"
 #include "ledalert.h"
 
-
 #define LED_NOCOMMAND                           255
 
 #if defined(BOARD_PCA10059)
