@@ -6029,7 +6029,7 @@
  
 
 #ifndef LOW_POWER_PWM_ENABLED
-#define LOW_POWER_PWM_ENABLED 1
+#define LOW_POWER_PWM_ENABLED 0
 #endif
 // </e>
 
@@ -6037,7 +6037,7 @@
  
 
 #ifndef LED_SOFTBLINK_ENABLED
-#define LED_SOFTBLINK_ENABLED 1
+#define LED_SOFTBLINK_ENABLED 0
 #endif
 
 // </h> 

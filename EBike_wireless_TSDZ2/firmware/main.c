@@ -52,23 +52,7 @@
 #include "boards.h"
 #include "nrf_bootloader_info.h"
 #include "buttons.h"
-//#include "screen.h"
-#include "led_softblink.h"
-#include "low_power_pwm.h"
-
-// Copied from rananna's wireless remote code for led control
-uint8_t led_duty_cycle = 120;
-//mask_number used for pwm debugging
-int8_t mask_number = 0;
-#define P_LED BSP_LED_0_MASK //green (pwr)
-#define R_LED BSP_LED_1_MASK //red
-#define G_LED BSP_LED_2_MASK //green
-#define B_LED BSP_LED_3_MASK //blue
-//pwm blinking led routine is led_pwm_on
-//only one instance may be active at any time
-//softblink is the instance flag 1 means led busy, 0 or 2 means led ready
-uint8_t soft_blink = 0;
-APP_TIMER_DEF(led_timer);
+#include "ledalert.h"
 
 extern uint8_t ui8_g_battery_soc;
 ui_vars_t *mp_ui_vars;
@@ -92,10 +76,10 @@ static uint8_t ui8_walk_assist_timeout = 0;
 
 // uint8_t g_showNextScreenIndex = 0;
 // uint8_t g_showNextScreenPreviousIndex = 0;
-uint16_t ui16_m_alternate_field_value;
-uint8_t ui8_m_alternate_field_state = 0;
-uint8_t ui8_m_alternate_field_timeout_cnt = 0;
-uint8_t ui8_m_vthrottle_can_increment_decrement = 0;
+// uint16_t ui16_m_alternate_field_value;
+// uint8_t ui8_m_alternate_field_state = 0;
+// uint8_t ui8_m_alternate_field_timeout_cnt = 0;
+// uint8_t ui8_m_vthrottle_can_increment_decrement = 0;
 
 typedef enum
 {
@@ -1515,6 +1499,7 @@ void TSDZ2_power_manage(void)
     motor_power_enable(true);
     g_motor_init_state = MOTOR_INIT_GET_MOTOR_ALIVE;
     m_TSDZ2_power_state = TSDZ2_POWER_STATE_ON;
+    led_alert(LED_SEQUENCE_GREEN_FLASH10);
     break;
 
   case TSDZ2_POWER_STATE_ON:
@@ -1527,12 +1512,14 @@ void TSDZ2_power_manage(void)
 bool anyscreen_onpress(buttons_events_t events) {
   if ((events & DOWN_LONG_CLICK) && ui_vars.ui8_walk_assist_feature_enabled) {
     ui_vars.ui8_walk_assist = 1;
+    led_alert(LED_SEQUENCE_SPECTRUM);
     return true;
   }
 
   // long up to turn on headlights
   if (events & UP_LONG_CLICK) {
     ui_vars.ui8_lights = !ui_vars.ui8_lights;
+    led_alert(LED_SEQUENCE_TEST_MESSAGE);
     //set_lcd_backlight();
 
     return true;
@@ -1541,153 +1528,153 @@ bool anyscreen_onpress(buttons_events_t events) {
   return false;
 }
 
-static bool onPressAlternateField(buttons_events_t events) {
-  bool handled = false;
+// static bool onPressAlternateField(buttons_events_t events) {
+//   bool handled = false;
 
-  // start increment throttle only with UP_LONG_CLICK
-  if ((ui8_m_alternate_field_state == 7) &&
-      (events & UP_LONG_CLICK) &&
-      (ui8_m_vthrottle_can_increment_decrement == 0)) {
-    ui8_m_vthrottle_can_increment_decrement = 1;
-    events |= UP_CLICK; // let's increment, consider UP CLICK
-    ui8_m_alternate_field_timeout_cnt = 50; // 50 * 20ms = 1 second
-  }
+//   // start increment throttle only with UP_LONG_CLICK
+//   if ((ui8_m_alternate_field_state == 7) &&
+//       (events & UP_LONG_CLICK) &&
+//       (ui8_m_vthrottle_can_increment_decrement == 0)) {
+//     ui8_m_vthrottle_can_increment_decrement = 1;
+//     events |= UP_CLICK; // let's increment, consider UP CLICK
+//     ui8_m_alternate_field_timeout_cnt = 50; // 50 * 20ms = 1 second
+//   }
 
-  if (ui8_m_alternate_field_timeout_cnt == 0) {
-    ui_vars.ui8_throttle_virtual = 0;
-    ui8_m_vthrottle_can_increment_decrement = 0;
-  }
+//   if (ui8_m_alternate_field_timeout_cnt == 0) {
+//     ui_vars.ui8_throttle_virtual = 0;
+//     ui8_m_vthrottle_can_increment_decrement = 0;
+//   }
 
-  switch (ui8_m_alternate_field_state) {
-    case 0:
-      if (events & SCREENCLICK_ALTERNATE_FIELD_START) {
-        ui8_m_alternate_field_state = 1;
-        handled = true;
-      }
-      break;
+//   switch (ui8_m_alternate_field_state) {
+//     case 0:
+//       if (events & SCREENCLICK_ALTERNATE_FIELD_START) {
+//         ui8_m_alternate_field_state = 1;
+//         handled = true;
+//       }
+//       break;
 
-    // max power
-    case 3:
-      if (
-        (
-          ui_vars.ui8_street_mode_function_enabled
-          && ui_vars.ui8_street_mode_enabled
-          && ui_vars.ui8_street_mode_throttle_enabled
-          || !ui_vars.ui8_street_mode_function_enabled
-          || !ui_vars.ui8_street_mode_enabled
-        )
-        && events & SCREENCLICK_ALTERNATE_FIELD_START
-      ) {
-        ui8_m_alternate_field_state = 6;
-        handled = true;
-        break;
-      }
+//     // max power
+//     case 3:
+//       if (
+//         (
+//           ui_vars.ui8_street_mode_function_enabled
+//           && ui_vars.ui8_street_mode_enabled
+//           && ui_vars.ui8_street_mode_throttle_enabled
+//           || !ui_vars.ui8_street_mode_function_enabled
+//           || !ui_vars.ui8_street_mode_enabled
+//         )
+//         && events & SCREENCLICK_ALTERNATE_FIELD_START
+//       ) {
+//         ui8_m_alternate_field_state = 6;
+//         handled = true;
+//         break;
+//       }
 
-      if (events & SCREENCLICK_ALTERNATE_FIELD_STOP) {
-        ui8_m_alternate_field_state = 4;
-        handled = true;
-        break;
-      }
+//       if (events & SCREENCLICK_ALTERNATE_FIELD_STOP) {
+//         ui8_m_alternate_field_state = 4;
+//         handled = true;
+//         break;
+//       }
 
-      if (events & UP_CLICK) {
-        handled = true;
+//       if (events & UP_CLICK) {
+//         handled = true;
 
-        if (ui_vars.ui8_target_max_battery_power_div25 < 10) {
-          ui_vars.ui8_target_max_battery_power_div25++;
-        } else {
-          ui_vars.ui8_target_max_battery_power_div25 += 2;
-        }
+//         if (ui_vars.ui8_target_max_battery_power_div25 < 10) {
+//           ui_vars.ui8_target_max_battery_power_div25++;
+//         } else {
+//           ui_vars.ui8_target_max_battery_power_div25 += 2;
+//         }
 
-        // limit to 100 * 25 = 2500 Watts
-        if(ui_vars.ui8_target_max_battery_power_div25 > 100) {
-          ui_vars.ui8_target_max_battery_power_div25 = 100;
-        }
+//         // limit to 100 * 25 = 2500 Watts
+//         if(ui_vars.ui8_target_max_battery_power_div25 > 100) {
+//           ui_vars.ui8_target_max_battery_power_div25 = 100;
+//         }
 
-        break;
-      }
+//         break;
+//       }
 
-      if (events & DOWN_CLICK) {
-        handled = true;
+//       if (events & DOWN_CLICK) {
+//         handled = true;
 
-        if (ui_vars.ui8_target_max_battery_power_div25 <= 10 &&
-            ui_vars.ui8_target_max_battery_power_div25 > 1) {
-          ui_vars.ui8_target_max_battery_power_div25--;
-        } else if (ui_vars.ui8_target_max_battery_power_div25 > 10) {
-          ui_vars.ui8_target_max_battery_power_div25 -= 2;
-        }
+//         if (ui_vars.ui8_target_max_battery_power_div25 <= 10 &&
+//             ui_vars.ui8_target_max_battery_power_div25 > 1) {
+//           ui_vars.ui8_target_max_battery_power_div25--;
+//         } else if (ui_vars.ui8_target_max_battery_power_div25 > 10) {
+//           ui_vars.ui8_target_max_battery_power_div25 -= 2;
+//         }
 
-        break;
-      }
-    break;
+//         break;
+//       }
+//     break;
 
-    // virtual throttle
-    // From what I can see - for VT to work- you need street mode enabled, you need throttle enabled for street mode.
-    // up+onoff long press then gets you into alternate state 3
-    // up+onoff long press 2nd time then gets you into alternate state 7
-    // onoff long press seems to get you out of alternate state (back to 0) and back to normal assist
-    // Having said all that - i cannot get the motor to spin when in either 3 or 7 state - 
-    // not sure if this lack of something implemented here - or that I'm not activating VT properly.
-    case 7:
-      if (events & SCREENCLICK_ALTERNATE_FIELD_START) {
-        ui8_m_alternate_field_state = 1;
-        handled = true;
-        break;
-      }
+//     // virtual throttle
+//     // From what I can see - for VT to work- you need street mode enabled, you need throttle enabled for street mode.
+//     // up+onoff long press then gets you into alternate state 3
+//     // up+onoff long press 2nd time then gets you into alternate state 7
+//     // onoff long press seems to get you out of alternate state (back to 0) and back to normal assist
+//     // Having said all that - i cannot get the motor to spin when in either 3 or 7 state - 
+//     // not sure if this lack of something implemented here - or that I'm not activating VT properly.
+//     case 7:
+//       if (events & SCREENCLICK_ALTERNATE_FIELD_START) {
+//         ui8_m_alternate_field_state = 1;
+//         handled = true;
+//         break;
+//       }
 
-      if (events & SCREENCLICK_ALTERNATE_FIELD_STOP) {
-        ui_vars.ui8_throttle_virtual = 0;
-        ui8_m_alternate_field_timeout_cnt = 0;
-        ui8_m_vthrottle_can_increment_decrement = 0;
-        ui8_m_alternate_field_state = 4;
-        handled = true;
-        break;
-      }
+//       if (events & SCREENCLICK_ALTERNATE_FIELD_STOP) {
+//         ui_vars.ui8_throttle_virtual = 0;
+//         ui8_m_alternate_field_timeout_cnt = 0;
+//         ui8_m_vthrottle_can_increment_decrement = 0;
+//         ui8_m_alternate_field_state = 4;
+//         handled = true;
+//         break;
+//       }
 
-      if (events & UP_CLICK) {
-        handled = true;
+//       if (events & UP_CLICK) {
+//         handled = true;
 
-        if (ui8_m_vthrottle_can_increment_decrement &&
-            ui_vars.ui8_assist_level) {
-          if ((ui_vars.ui8_throttle_virtual + ui_vars.ui8_throttle_virtual_step) <= 100) {
-            ui_vars.ui8_throttle_virtual += ui_vars.ui8_throttle_virtual_step;
-          } else {
-            ui_vars.ui8_throttle_virtual = 100;
-          }
+//         if (ui8_m_vthrottle_can_increment_decrement &&
+//             ui_vars.ui8_assist_level) {
+//           if ((ui_vars.ui8_throttle_virtual + ui_vars.ui8_throttle_virtual_step) <= 100) {
+//             ui_vars.ui8_throttle_virtual += ui_vars.ui8_throttle_virtual_step;
+//           } else {
+//             ui_vars.ui8_throttle_virtual = 100;
+//           }
 
-          ui8_m_alternate_field_timeout_cnt = 50;
-        }
+//           ui8_m_alternate_field_timeout_cnt = 50;
+//         }
 
-        break;
-      }
+//         break;
+//       }
 
-      if (events & DOWN_CLICK) {
-        handled = true;
+//       if (events & DOWN_CLICK) {
+//         handled = true;
 
-        if (ui8_m_vthrottle_can_increment_decrement &&
-            ui_vars.ui8_assist_level) {
-          if (ui_vars.ui8_throttle_virtual >= ui_vars.ui8_throttle_virtual_step) {
-            ui_vars.ui8_throttle_virtual -= ui_vars.ui8_throttle_virtual_step;
-          } else {
-            ui_vars.ui8_throttle_virtual = 0;
-          }
+//         if (ui8_m_vthrottle_can_increment_decrement &&
+//             ui_vars.ui8_assist_level) {
+//           if (ui_vars.ui8_throttle_virtual >= ui_vars.ui8_throttle_virtual_step) {
+//             ui_vars.ui8_throttle_virtual -= ui_vars.ui8_throttle_virtual_step;
+//           } else {
+//             ui_vars.ui8_throttle_virtual = 0;
+//           }
 
-          ui8_m_alternate_field_timeout_cnt = 50;
-        }
+//           ui8_m_alternate_field_timeout_cnt = 50;
+//         }
 
-        break;
-      }
-    break;
-  }
+//         break;
+//       }
+//     break;
+//   }
 
-  if (ui8_m_alternate_field_state == 7) {
-    // user will keep UP DOWN LONG clicks on this state, so, clean them to not pass to next code
-    if ((events & UP_LONG_CLICK) ||
-        (events & DOWN_LONG_CLICK))
-      handled = true;
-  }
+//   if (ui8_m_alternate_field_state == 7) {
+//     // user will keep UP DOWN LONG clicks on this state, so, clean them to not pass to next code
+//     if ((events & UP_LONG_CLICK) ||
+//         (events & DOWN_LONG_CLICK))
+//       handled = true;
+//   }
 
-  return handled;
-}
+//   return handled;
+// }
 
 static bool onPressStreetMode(buttons_events_t events) {
   bool handled = false;
@@ -1713,7 +1700,7 @@ static bool onPressStreetMode(buttons_events_t events) {
 bool mainScreenOnPress(buttons_events_t events) {
   bool handled = false;
 
-  handled = onPressAlternateField(events);
+  //handled = onPressAlternateField(events);
 
   if (handled == false)
     handled = anyscreen_onpress(events);
@@ -1721,11 +1708,11 @@ bool mainScreenOnPress(buttons_events_t events) {
   if (handled == false)
     handled = onPressStreetMode(events);
 
-  if (handled == false &&
-      ui8_m_alternate_field_state == 0) {
+  if (handled == false) //&& ui8_m_alternate_field_state == 0) 
+  {
     if (events & UP_CLICK) {
       ui_vars.ui8_assist_level++;
-
+      led_alert(LED_SEQUENCE_BLUE_FLASH10);
       if (ui_vars.ui8_assist_level > ui_vars.ui8_number_of_assist_levels) {
         ui_vars.ui8_assist_level = ui_vars.ui8_number_of_assist_levels;
       }
@@ -1740,6 +1727,7 @@ bool mainScreenOnPress(buttons_events_t events) {
     ) {
       if (ui_vars.ui8_assist_level > 0)
         ui_vars.ui8_assist_level--;
+        led_alert(LED_SEQUENCE_GREEN_FLASH10);
 
       m_assist_level_change_timeout = 20; // 2 seconds
       handled = true;
@@ -1749,66 +1737,66 @@ bool mainScreenOnPress(buttons_events_t events) {
 	return handled;
 }
 
-void alternatField(void) {
-  //static const char str_max_power[] = "max power";
-  //static const char str_throttle[] = "throttle";
+// void alternatField(void) {
+//   //static const char str_max_power[] = "max power";
+//   //static const char str_throttle[] = "throttle";
 
-  switch (ui8_m_alternate_field_state) {
-    case 1:
-// #ifndef SW102
-//       assistLevelField.rw->visibility = FieldTransitionNotVisible;
-// #else
-//       wheelSpeedIntegerField.rw->visibility = FieldTransitionNotVisible;
-// #endif
-      ui8_m_alternate_field_state = 2;
+//   switch (ui8_m_alternate_field_state) {
+//     case 1:
+// // #ifndef SW102
+// //       assistLevelField.rw->visibility = FieldTransitionNotVisible;
+// // #else
+// //       wheelSpeedIntegerField.rw->visibility = FieldTransitionNotVisible;
+// // #endif
+//       ui8_m_alternate_field_state = 2;
 
-// #ifndef SW102
-//       UG_SetBackcolor(C_BLACK);
-//       UG_SetForecolor(MAIN_SCREEN_FIELD_LABELS_COLOR);
-//       UG_FontSelect(&FONT_10X16);
-//       UG_PutString(15, 46, "      ");
-// #endif
-      break;
+// // #ifndef SW102
+// //       UG_SetBackcolor(C_BLACK);
+// //       UG_SetForecolor(MAIN_SCREEN_FIELD_LABELS_COLOR);
+// //       UG_FontSelect(&FONT_10X16);
+// //       UG_PutString(15, 46, "      ");
+// // #endif
+//       break;
 
-    case 2:
-      //updateReadOnlyLabelStr(&fieldAlternate, str_max_power);
-      //fieldAlternate.rw->visibility = FieldTransitionVisible;
-      //mainScreenOnDirtyClean();
-      ui8_m_alternate_field_state = 3;
-      break;
+//     case 2:
+//       //updateReadOnlyLabelStr(&fieldAlternate, str_max_power);
+//       //fieldAlternate.rw->visibility = FieldTransitionVisible;
+//       //mainScreenOnDirtyClean();
+//       ui8_m_alternate_field_state = 3;
+//       break;
 
-    case 3:
-      // keep updating the variable to show on display
-      ui16_m_alternate_field_value = ((uint16_t) ui_vars.ui8_target_max_battery_power_div25) * 25;
-      break;
+//     case 3:
+//       // keep updating the variable to show on display
+//       ui16_m_alternate_field_value = ((uint16_t) ui_vars.ui8_target_max_battery_power_div25) * 25;
+//       break;
 
-    case 4:
-      //fieldAlternate.rw->visibility = FieldTransitionNotVisible;
-      ui8_m_alternate_field_state = 5;
-      break;
+//     case 4:
+//       //fieldAlternate.rw->visibility = FieldTransitionNotVisible;
+//       ui8_m_alternate_field_state = 5;
+//       break;
 
-    case 5:
-// #ifndef SW102
-//       assistLevelField.rw->visibility = FieldTransitionVisible;
-// #else
-//       wheelSpeedIntegerField.rw->visibility = FieldTransitionVisible;
-// #endif
-      //mainScreenOnDirtyClean();
-      ui8_m_alternate_field_state = 0;
-      break;
+//     case 5:
+// // #ifndef SW102
+// //       assistLevelField.rw->visibility = FieldTransitionVisible;
+// // #else
+// //       wheelSpeedIntegerField.rw->visibility = FieldTransitionVisible;
+// // #endif
+//       //mainScreenOnDirtyClean();
+//       ui8_m_alternate_field_state = 0;
+//       break;
 
-    case 6:
-      //updateReadOnlyLabelStr(&fieldAlternate, str_throttle);
-      //mainScreenOnDirtyClean();
-      ui8_m_alternate_field_state = 7;
-      break;
+//     case 6:
+//       //updateReadOnlyLabelStr(&fieldAlternate, str_throttle);
+//       //mainScreenOnDirtyClean();
+//       ui8_m_alternate_field_state = 7;
+//       break;
 
-    case 7:
-      // keep updating the variable to show on display
-      ui16_m_alternate_field_value = (uint16_t) ui_vars.ui8_throttle_virtual;
-      break;
-  }
-}
+//     case 7:
+//       // keep updating the variable to show on display
+//       ui16_m_alternate_field_value = (uint16_t) ui_vars.ui8_throttle_virtual;
+//       break;
+//   }
+// }
 
 void streetMode(void) {
   if (ui_vars.ui8_street_mode_function_enabled)
@@ -1880,19 +1868,19 @@ static void handle_buttons() {
     buttons_clear_onoff_click_long_click_event();
   }
 
-   if (ui8_m_alternate_field_state == 7) { // if virtual throttle mode
-    if (buttons_get_up_state() == 0 && // UP and DOWN buttons not pressed
-            buttons_get_down_state() == 0) {
-      if (ui8_m_alternate_field_timeout_cnt) {
-        ui8_m_alternate_field_timeout_cnt--;
-      } else {
-        ui8_m_vthrottle_can_increment_decrement = 0;
-        ui_vars.ui8_throttle_virtual = 0;
-      }
-    } else {
-      ui8_m_alternate_field_timeout_cnt = 50;
-    }
-  }  
+  //  if (ui8_m_alternate_field_state == 7) { // if virtual throttle mode
+  //   if (buttons_get_up_state() == 0 && // UP and DOWN buttons not pressed
+  //           buttons_get_down_state() == 0) {
+  //     if (ui8_m_alternate_field_timeout_cnt) {
+  //       ui8_m_alternate_field_timeout_cnt--;
+  //     } else {
+  //       ui8_m_vthrottle_can_increment_decrement = 0;
+  //       ui_vars.ui8_throttle_virtual = 0;
+  //     }
+  //   } else {
+  //     ui8_m_alternate_field_timeout_cnt = 50;
+  //   }
+  // }  
 
   if (buttons_events && firstTime == 0)
   {
@@ -1911,63 +1899,6 @@ static void handle_buttons() {
 	}
 
 	buttons_clock(); // Note: this is done _after_ button events is checked to provide a 20ms debounce
-}
-
-void led_pwm_on(uint32_t mask, uint8_t duty_cycle_max, uint8_t duty_cycle_min, uint8_t duty_cycle_step, uint32_t led_on_ms)
-{
-  //mask can be ORed to turn on R &B colors
-  //ie: R_LED || B_LED
-  //not G_LED as it is on a diffderent gpio port
-  ret_code_t err_code;
-  NRF_GPIO_Type *port;
-  uint32_t ON_TICKS = 0;
-  ON_TICKS = APP_TIMER_TICKS(led_on_ms);
-
-  if (soft_blink == 0) //ok to start another pwm instance
-  {
-
-    //fix for port number problem with green led
-    port = NRF_P0;
-    if (mask == G_LED)
-      port = NRF_P1;
-
-#define LED_PWM_PARAMS(mask)                             \
-  {                                                      \
-    .active_high = false,                                \
-    .duty_cycle_max = duty_cycle_max,                    \
-    .duty_cycle_min = duty_cycle_min,                    \
-    .duty_cycle_step = duty_cycle_step,                  \
-    .off_time_ticks = 3000,                              \
-    .on_time_ticks = 0,                                  \
-    .leds_pin_bm = LED_SB_INIT_PARAMS_LEDS_PIN_BM(mask), \
-    .p_leds_port = port                                  \
-  }
-    const led_sb_init_params_t led_pwm_init_param = LED_PWM_PARAMS(mask);
-
-    err_code = led_softblink_init(&led_pwm_init_param);
-    APP_ERROR_CHECK(err_code);
-
-    if (led_on_ms)
-    {
-      err_code = app_timer_start(led_timer, ON_TICKS, NULL);
-      APP_ERROR_CHECK(err_code);
-    }
-    err_code = led_softblink_start(mask);
-    APP_ERROR_CHECK(err_code);
-    soft_blink = 1; //set the blocking flag
-  }
-}
-
-void disp_soc(void)
-{
-  nrf_delay_ms(1000);
-  for (int i = 0; i < (ui8_g_battery_soc/10); i++)
-  {
-    led_pwm_on(G_LED, 100, 0, 5, 0);
-    nrf_delay_ms(200);
-    soft_blink = led_softblink_uninit(); // turn off the soft_blink led
-    nrf_delay_ms(300);
-  }
 }
 
 int main(void)
@@ -2001,7 +1932,10 @@ int main(void)
   ui8_m_ant_device_id = mp_ui_vars->ui8_ant_device_id;
   uint32_t ui32_rt_last_run_time = 0;
   uint32_t ui32_dfucheck_last_run_time = 0;
-  
+
+  led_alert(LED_SEQUENCE_TEST_MESSAGE);
+  led_alert(LED_SEQUENCE_BLUE_FLASH10);
+  led_alert(LED_SEQUENCE_TEST_MESSAGE);
   while (1)
   {
     // every 50 ms
@@ -2024,6 +1958,7 @@ int main(void)
       handle_buttons();
       //alternatField(); // Removed until we can resolve what to do with the alternate state display requirements
       streetMode();
+      led_clock();
     }
 
     // every 1 second
