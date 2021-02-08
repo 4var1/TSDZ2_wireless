@@ -1499,7 +1499,6 @@ void TSDZ2_power_manage(void)
     motor_power_enable(true);
     g_motor_init_state = MOTOR_INIT_GET_MOTOR_ALIVE;
     m_TSDZ2_power_state = TSDZ2_POWER_STATE_ON;
-    led_alert(LED_SEQUENCE_GREEN_FLASH10);
     break;
 
   case TSDZ2_POWER_STATE_ON:
@@ -1512,14 +1511,12 @@ void TSDZ2_power_manage(void)
 bool anyscreen_onpress(buttons_events_t events) {
   if ((events & DOWN_LONG_CLICK) && ui_vars.ui8_walk_assist_feature_enabled) {
     ui_vars.ui8_walk_assist = 1;
-    led_alert(LED_SEQUENCE_SPECTRUM);
     return true;
   }
 
   // long up to turn on headlights
   if (events & UP_LONG_CLICK) {
     ui_vars.ui8_lights = !ui_vars.ui8_lights;
-    led_alert(LED_SEQUENCE_TEST_MESSAGE);
     //set_lcd_backlight();
 
     return true;
@@ -1712,7 +1709,6 @@ bool mainScreenOnPress(buttons_events_t events) {
   {
     if (events & UP_CLICK) {
       ui_vars.ui8_assist_level++;
-      led_alert(LED_SEQUENCE_BLUE_FLASH10);
       if (ui_vars.ui8_assist_level > ui_vars.ui8_number_of_assist_levels) {
         ui_vars.ui8_assist_level = ui_vars.ui8_number_of_assist_levels;
       }
@@ -1728,7 +1724,6 @@ bool mainScreenOnPress(buttons_events_t events) {
       if (ui_vars.ui8_assist_level > 0)
         ui_vars.ui8_assist_level--;
       
-      led_alert(LED_SEQUENCE_GREEN_FLASH10);
       m_assist_level_change_timeout = 20; // 2 seconds
       handled = true;
     }
@@ -1933,10 +1928,7 @@ int main(void)
   uint32_t ui32_rt_last_run_time = 0;
   uint32_t ui32_dfucheck_last_run_time = 0;
 
-  led_alert(LED_SEQUENCE_TEST_MESSAGE);
-  led_alert(LED_SEQUENCE_BLUE_FLASH10);
-  led_alert(LED_SEQUENCE_TEST_MESSAGE);
-  while (1)
+   while (1)
   {
     // every 50 ms
     uint32_t ui32_time_now = get_time_base_counter_1ms();
