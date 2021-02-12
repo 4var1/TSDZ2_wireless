@@ -42,7 +42,7 @@ uint16_t ui16_pwm_table_blue [LED_PWM_TABLE_LEN] =
 uint8_t ui8_led_red_intensity;
 uint8_t ui8_led_green_intensity;
 uint8_t ui8_led_blue_intensity;
-uint16_t ui16_pwm_mask = 0;
+uint16_t ui16_pwm_mask = 32768;
 uint8_t ui8_led_sequence_queue[LED_SEQUENCE_BUFFER_SIZE];
 uint8_t ui8_led_sequence_queue_read_position = 0;
 uint8_t ui8_led_sequence_queue_write_position = 0;
