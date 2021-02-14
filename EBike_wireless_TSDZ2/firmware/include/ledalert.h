@@ -136,7 +136,7 @@ static const uint8_t ui8_led_sequences [LED_NUM_SEQUENCES][LED_MAX_COMMANDS_IN_S
 };
 
 
-// ui8_sequence
+// Sequences - don't use these directly - map them to LED_EVENTs and reference those in code. 
 #define LED_SEQUENCE_SHORT_GREEN                    0
 #define LED_SEQUENCE_SHORT_RED                      1
 #define LED_SEQUENCE_SHORT_BLUE                     2
@@ -175,18 +175,25 @@ static const uint8_t ui8_led_sequences [LED_NUM_SEQUENCES][LED_MAX_COMMANDS_IN_S
 #define LED_SEQUENCE_GREENSLOWFLASH_9               35
 #define LED_SEQUENCE_GREENSLOWFLASH_10              36
 
+// Status changes
 #define LED_EVENT_WIRELESS_BOARD_POWER_ON           LED_SEQUENCE_RED_YELLOW_LONGGREEN
 #define LED_EVENT_BLUETOOTH_CONNECT                 LED_SEQUENCE_BLUE_SLOWFLASH_2_LONGGREEN
 #define LED_EVENT_BLUETOOTH_DISCONNECT              LED_SEQUENCE_BLUE_SLOWFLASH_2_LONGRED
-#define LED_EVENT_MOTOR_ON_WAIT                     LED_SEQUENCE_YELLOW_SLOWFLASH
 #define LED_EVENT_MOTOR_ON_COMPLETE                 LED_SEQUENCE_GREEN_SLOWFLASH_2_LONGGREEN
 #define LED_EVENT_MOTOR_OFF                         LED_SEQUENCE_RED_SLOWFLASH_2_LONGRED
 #define LED_EVENT_LIGHTS_OFF                        LED_SEQUENCE_WHITE_SLOWFLASH_2_LONGRED
 #define LED_EVENT_LIGHTS_ON                         LED_SEQUENCE_WHITE_SLOWFLASH_2_LONGGREEN
+
+//Events without a fixed duration
+#define LED_EVENT_MOTOR_ON_WAIT                     LED_SEQUENCE_YELLOW_SLOWFLASH
+#define LED_EVENT_WALK_ASSIST_ACTIVE                LED_SEQUENCE_GREENFLASH_1
+
+// Assist change responses
 #define LED_EVENT_ASSIST_LIMITS_REACHED             LED_SEQUENCE_SHORT_RED
 #define LED_EVENT_ASSIST_LEVEL_DECREASE             LED_SEQUENCE_SHORT_YELLOW
 #define LED_EVENT_ASSIST_LEVEL_INCREASE             LED_SEQUENCE_SHORT_GREEN
-#define LED_EVENT_WALK_ASSIST_ACTIVE                LED_SEQUENCE_GREENFLASH_1
+
+// Informational
 #define LED_EVENT_BATTERY_SOC_0_PERCENT             LED_SEQUENCE_OFF_1S
 #define LED_EVENT_BATTERY_SOC_10_PERCENT            LED_SEQUENCE_REDSLOWFLASH_1
 #define LED_EVENT_BATTERY_SOC_20_PERCENT            LED_SEQUENCE_REDSLOWFLASH_2
@@ -198,6 +205,8 @@ static const uint8_t ui8_led_sequences [LED_NUM_SEQUENCES][LED_MAX_COMMANDS_IN_S
 #define LED_EVENT_BATTERY_SOC_80_PERCENT            LED_SEQUENCE_GREENSLOWFLASH_8
 #define LED_EVENT_BATTERY_SOC_90_PERCENT            LED_SEQUENCE_GREENSLOWFLASH_9
 #define LED_EVENT_BATTERY_SOC_100_PERCENT           LED_SEQUENCE_GREENSLOWFLASH_10
+
+//Pauses
 #define LED_EVENT_WAIT_1S                           LED_SEQUENCE_OFF_1S
              
 
@@ -207,6 +216,6 @@ void led_alert(uint8_t ui8_sequence);                            // call this to
 void led_clear_queue(void);                                      // used if you want to play a sequence right now. clear the queue then the next thing you play is up now.
 void led_hold_queue(void);                                       // Used to keep the current sequence playing until you release the queue
 void led_release_queue(void);                                    // Go back to normal - play the queue as it happens
-void led_set_global_brightness(uint8_t ui8_global_brightness);   // Default is 1 - lowest. 3 currently is highest.
+void led_set_global_brightness(uint8_t ui8_global_brightness);   // Default is 1 - lowest. 7 currently is highest.
 
 
