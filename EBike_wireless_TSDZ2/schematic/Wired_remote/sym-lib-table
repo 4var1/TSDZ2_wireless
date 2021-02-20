@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name Wired_remote)(type Legacy)(uri ${KIPRJMOD}/Wired_remote.lib)(options "")(descr ""))
+)
